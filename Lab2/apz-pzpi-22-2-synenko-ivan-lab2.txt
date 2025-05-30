@@ -58,17 +58,16 @@
 
 Рисунок 1 – Початкові умови
 Проведемо лінію через T паралельно осі ox, відмітимо її перетин з осями, направленими паралельно oy. Вона сформує прямокутні трикутники NAT, MBT, з чого видно, що кут АTB дорівнює (180 - (90 - azimuth alpha) -  (90 - azimuth beta), що можна скоротити до azimuth alpha + azimuth beta). Оскільки азимут бета направлений в інший бік, у програмі береться він зі знаком мінус. 
+
+
   
 
-Рисунок 2 – Паралельна лінія
-  
-
-Рисунок 3 – Обрахування ATB
+Рисунок 2 – Обрахування ATB
 Далі, як видно, кут TAB – це різниця між NAB і азімутом alpha. Оскільки у трикутнику NAB сторона AB дорівнює різниці між B та A по осі ox, а сторона NA – по осі oy, то його можна обрахувати як atan(AB / NA). Далі, віднявib від нього азімут alpha, ми отримуємо кут АTB. Отримати останній з кутів трикутника можна, знаючи два інших.
 Далі ми можемо знайти висоту TH за наступною формулою:
   
 
-Рисунок  4 – Формула висоти
+Рисунок  3 – Формула висоти
 А знаючи висоту, можемо вияснити дистанцію між A і ціллю, адже вона – це гіпотенуза у прямокутному трикутнику ATH.  
 Знаючи дистанцію між A і T, а також кут азимуту – NAT – ми можемо виявити координати x та y. Додавши їх до координат точки А, ми отримаємо координати точки Т. Функції тріангуляції представлені у лістингу 1 додатку Б, а тестування – у лістингу 2.
 6. Аналіз, показ і початок тривоги покладені на окремі відповідні потоки, які пов’язані між собою чергами LinkedBlockingQueue<>. Це рішення дозволяє обробляти дані по мірі їх приходу. Зберігання даних реального часу від радарів покладено на ще один окремий потік, який запускається раз на десять секунд і викликає збереження у БД, що дозволяє не завантажувати БД постійними запитами. Очищення БД від поточних даних радарів і збереження їх у binary dump покладено на ще один потік, який запускається один раз на 24 години.
@@ -86,33 +85,51 @@ ________________
 
 
 ДОДАТОК А
-Діаграми і схема бази даних
-  
-
-Рисунок 5 - ER-діаграма (нотація Чена)
-
-
-  
-
-Рисунок 6 - Схема NoSQL бази даних MongoDB
-________________
-  
-
-Рисунок 7 - UML-діаграма прецедентів, дії з користувачами і авторизація
-  
-
-Рисунок 8 - UML-діаграма прецедентів (завершення)
-________________
+Відеозапис
+Відеозапис презентації результатів лабораторної роботи: 
+https://youtu.be/Cg-be8Dz8mw 
+Хронологічний опис роботи:
+00:00 - початок
+00:37 - аналіз даних від радіостанцій
+03:07 - аналіз стану неба і стратегія визначення загроз 
+04:08 - триангуляція
+06:31 - тестування триангуляції і web socket
+08:31 - тестування CRUD-операцій і аутентифікації
 
 
-  
-
-Рисунок 9 - UML-діаграма послідовності
 ________________
 
 
 ДОДАТОК Б
+Графічні матеріали
+  
+
+Рисунок Б.1 — ER-діаграма даних (нотація Чена)
+
+
+  
+
+Рисунок Б.2 — Структура бази даних NoSQL (MongoDB)
+________________
+  
+
+Рисунок Б.3 — UML-діаграма прецедентів, дії з користувачами і авторизація
+  
+
+Рисунок Б.4 — UML-діаграма прецедентів (завершення)
+________________
+
+
+  
+
+Рисунок Б.5 — UML-діаграма прецедентів - UML-діаграма послідовності
+________________
+
+
+ДОДАТОК В
 Фрагменти коду серверу
+В.1 Математична обробка прикладних даних
+                GitHub репозиторій: https://github.com/NureSynenkoIvan/apz-pzpi-22-2-synenko-ivan/blob/main/Lab2/BastionServer/src/main/java/com/bastionserver/analysis/service/strategy/SignalAnalysisStrategy.java 
                 Лістинг 1 – Функції триангуляції (фрагмент класу)
 public List<SkyObject> triangulateSkyObjects(List<Signal> rawSignals) {
         // We group signals by frequency, assuming that equal frequency means that signals originate from same source.
@@ -326,63 +343,205 @@ public class SignalAnalysisStrategyTests {
 
   
 
-Рисунок – Приклад 1 (геометричний)
+Рисунок В.1 – Приклад 1 (геометричний)
   
 
-Рисунок – Приклад 2 (геометричний)
+Рисунок В.2 – Приклад 2 (геометричний)
+В.2 Адміністрування бізнес-логіки системи
+GitHub репозиторій: https://github.com/NureSynenkoIvan/apz-pzpi-22-2-synenko-ivan/tree/main/Lab2/BastionServer/src/main/java/com/bastionserver/employees 
 
 
-Лістинг 3 - Потік автоматичного збереження бекапів бази даних
-public class DailyCleanupThread implements Runnable {
-    private static final String OUTPUT_FILE_PATH = "C:\\Users\\HP\\OneDrive\\Desktop\\MongoDB";
+Лістинг 3 - Контроллер сторінки для управління користувачами
+package com.bastionserver.employees.controller;
 
 
-    @Override
-    public void run() {
-        try {
-            System.out.println("Performing daily cleanup...");
-            DatabaseService.getInstance().dumpSkyStates(OUTPUT_FILE_PATH);
-            System.out.println("Sky states dumped successfully.");
-        } catch (Exception e) {
-            System.err.println("Error during daily cleanup: " + e.getMessage());
-        }
+import com.bastionserver.employees.model.Employee;
+import com.bastionserver.employees.service.EmployeeService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured; // або @PreAuthorize
+import org.springframework.web.bind.annotation.*;
+
+
+import java.util.List;
+import java.util.Optional;
+
+
+@RestController
+@RequestMapping("/employees")
+public class EmployeeController {
+
+
+    private final EmployeeService employeeService;
+
+
+    @Autowired
+    public EmployeeController(EmployeeService employeeService) {
+        this.employeeService = employeeService;
+    }
+
+
+    @GetMapping("/view")
+    @Secured({"ROLE_dispatcher", "ROLE_administrator"})
+    public ResponseEntity<Employee> getEmployee(@RequestParam String phoneNumber) {
+        Optional<Employee> employee = employeeService.getByPhoneNumber(phoneNumber);
+        return employee.isPresent() ? ResponseEntity.ok(employee.get()) : ResponseEntity.notFound().build();
+    }
+
+
+    @GetMapping
+    @Secured({"ROLE_dispatcher", "ROLE_administrator"})
+    public ResponseEntity<List<Employee>> getAllEmployees() {
+        List<Employee> employees = employeeService.getAllSortedByLastNameAsc();
+        return ResponseEntity.ok(employees);
+    }
+
+
+    @GetMapping("/on-shift")
+    @Secured({"ROLE_dispatcher", "ROLE_administrator"})
+    public ResponseEntity<List<Employee>> getAllOnShift() {
+        List<Employee> employees = employeeService.findByOnShiftTrueOrderByLastNameAsc();
+        return ResponseEntity.ok(employees);
+    }
+
+
+    @PostMapping
+    @Secured({"ROLE_dispatcher", "ROLE_administrator"})
+    public ResponseEntity<Void> addEmployee(@RequestBody Employee employee) {
+        employeeService.save(employee);
+        return ResponseEntity.ok().build();
+    }
+
+
+    @PutMapping
+    @Secured({"ROLE_dispatcher", "ROLE_administrator"})
+    public ResponseEntity<Void> updateEmployee(@RequestBody Employee employee) {
+        employeeService.update(employee);
+        return ResponseEntity.ok().build();
+    }
+
+
+    @DeleteMapping
+    @Secured({"ROLE_dispatcher", "ROLE_administrator"})
+    public ResponseEntity<Void> deleteEmployee(@RequestBody Employee employee) {
+        employeeService.delete(employee);
+        return ResponseEntity.ok().build();
     }
 }
 
 
 
 
-Лістинг 2 - Функція виклику автоматичного збереження
-public void dumpSkyStates(String outputPath) {
-        List<String> command = Arrays.asList(
-                "C:\\Program Files\\MongoDB\\Tools\\100\\bin\\mongodump.exe",
-                "--db", "bastion",
-                "--collection", "sky_state",
-                "--out", outputPath
-        );
-        ProcessBuilder pb = new ProcessBuilder(command).directory(new File(outputPath));
-        System.out.println(pb.command());
-        int exitCode = 0;
+В.3 Резервне копіювання користувацьких даних
+GitHub репозиторій:  https://github.com/NureSynenkoIvan/apz-pzpi-22-2-synenko-ivan/blob/main/Lab2/BastionServer/src/main/java/com/bastionserver/archiving/ArchivingService.java 
+
+
+Лістинг 3 - Запуск сервісу автоматичного збереження бекапів бази даних
+public class ArchivingService {
+    @Value("${mongo.tools.mongodump-path}")
+    private String mongodump;
+
+
+    @Value("${mongo.tools.mongorestore-path}")
+    private String mongorestore;
+
+
+    @Value("${mongo.tools.backup-files-output-path}")
+    private String backupOutputPath;
+
+
+    private String databaseName = "bastion";
+
+
+    private Logger log = LoggerFactory.getLogger(ArchivingService.class);
+    private SaveTask saving;
+    private DailyCleanupTask dailyCleanup;
+    private final SkyStateRepository skyStateRepository;
+    private final ScheduledExecutorService scheduler;
+
+
+    @Autowired
+    public ArchivingService(@Qualifier("persistenceQueue") BlockingQueue<SkyState> persistenceQueue,
+                            SkyStateRepository skyStateRepository,
+                            ScheduledExecutorService scheduler) {
+        this.skyStateRepository = skyStateRepository;
+        this.saving = new SaveTask(persistenceQueue, skyStateRepository);
+        this.scheduler = scheduler;
+    }
+
+
+    @PostConstruct
+    public void start() {
+        this.dailyCleanup = new DailyCleanupTask(skyStateRepository, backupOutputPath, this);
+        scheduler.scheduleAtFixedRate(saving, 10, 10, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(dailyCleanup, 0, 1, TimeUnit.DAYS);
+    }
+
+
+//...
+//...
+
+
+}
+
+
+
+
+Лістинг 2 - Функції виклику автоматичного збереження
+ public void dumpSkyStates(String outputPath) {
+        // Generate a unique folder name based on the current date and time
+        String timestamp = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(new Date());
+        String currentOutputPath = outputPath + "\\" + timestamp;
+
+
+        // Create the directory if it doesn't exist
         try {
-            Process process = pb.start();
-            exitCode = process.waitFor();
-        } catch (InterruptedException | IOException e) {
-            throw new RuntimeException(e);
+            Path outputDir = Paths.get(currentOutputPath);
+            Files.createDirectories(outputDir);
+            log.info("Created output directory: " + currentOutputPath);
+        } catch (IOException e) {
+            log.error("Failed to create output directory: " + currentOutputPath, e);
+            throw new RuntimeException("Could not create output directory", e);
         }
+        List<String> command = Arrays.asList(
+                mongodump,
+                "--db", databaseName,
+                "--collection", "sky_state",
+                "--out", currentOutputPath
+        );
 
 
-        System.out.println("exitCode:" + exitCode);
+        executeSubprocess(currentOutputPath, command);
     }
 
 
     public void dumpDatabase(String outputPath) {
         List<String> command = Arrays.asList(
-                "C:\\Program Files\\MongoDB\\Tools\\100\\bin\\mongodump.exe",
+                mongodump,
+                "--db", databaseName,
+                "--out", outputPath
+        );
+
+
+        executeSubprocess(outputPath, command);
+    }
+
+
+    public void restoreDatabase(String outputPath) {
+        List<String> command = Arrays.asList(
+                mongorestore,
                 "--db", "bastion",
                 "--out", outputPath
         );
-        ProcessBuilder pb = new ProcessBuilder(command).directory(new File(outputPath));
-        System.out.println(pb.command());
+
+
+        executeSubprocess(outputPath, command);
+    }
+
+
+    private void executeSubprocess(String path, List<String> command) {
+        ProcessBuilder pb = new ProcessBuilder(command).directory(new File(path));
+        log.info("Executing command: " + pb.command());
         int exitCode = 0;
         try {
             Process process = pb.start();
@@ -392,18 +551,5 @@ public void dumpSkyStates(String outputPath) {
         }
 
 
-        System.out.println("exitCode:" + exitCode);
+        log.info("exitCode:" + exitCode);
     }
-
-
-
-
-Лістинг 3 - Ресурс, що приймає дані з радарів
-}
-
-
-
-
-ДОДАТОК В
-Посилання на відео 
-https://youtu.be/Cg-be8Dz8mw
