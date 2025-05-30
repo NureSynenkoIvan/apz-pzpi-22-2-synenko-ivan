@@ -1,0 +1,409 @@
+﻿Харківський університет радіоелектроніки
+Факультет комп'ютерних наук
+Кафедра програмної інженерії
+
+
+
+
+
+
+ЗВІТ
+до лабораторної роботи 2 з дисципліни
+"Архітектура програмного забезпечення"
+на тему: 
+" РОЗРОБКА СЕРВЕРНОЇ ЧАСТИНИ ПРОГРАМНОЇ СИСТЕМИ"
+
+
+
+
+
+
+
+
+Виконав ст. гр ПЗПІ-22-2
+Синенко Іван Костянтинович
+
+
+Перевірив
+ст. викладач кафедри ПІ
+Сокорчук Ігор Петрович
+
+
+
+
+
+
+
+
+Харків 2025
+
+
+ 
+МЕТА
+        
+Мета роботи - розробити серверну/бек-енд частину програмної системи.
+
+
+ХІД РОБОТИ
+        Для реалізації бекенд-частини було обрано мову Java і фреймворк Spring. Це дозволило як структурувати код за принципом dependency injection, так і скористатися численними перевагами зрілої екосистеми Spring, такими як Spring Data JPA. 
+        У ході виконання роботи було реалізовано наступні функції адміністрування та бізнес-логіки: 
+1. Авторизація і аутентифікація. Для запобігання небажаному доступу до серверу треба забезпечити, щоби певні функції (наприклад, видалення інформації) були доступні лише адміністратору. Була реалізована функція авторизації за допомогою кодування Base64, а також доступ до ресурсів був обмежений лише певними ролями. 
+2. Безпечне і економне зберігання паролю з кешуванням: замість зберігання паролю база даних зберігає його хеш, закодований за допомогою блокового алгоритму “Блоуфіш” Брюса Шнайєра, що реалізований у бібліотеці jbcrypt. 
+3. Аналіз і зберігання даних у реальному часі. Поступаючі від радарів дані збираються ресурсом і передаються в чергу на аналіз. Всі дані перевіряються на ID радару, і записуються лише у тому випадку, якщо їм відповідає один з активних у цей час радарів. Стан неба передається в чергу на аналіз у тому випадку, якщо всі радари відправили свою інформацію. Існує також спеціальний потік, який періодично активується і відправляє стани неба на аналіз навіть у випадку, якщо всі радари не відповіли. Це існує для запобігання нескінченному очікуванню.
+ 4. До аналізу даних застосовується патерн “Стратегія”: алгоритм аналізу даних винесений у інтерфейс ThreatAnalysisStrategy. Можна створювати нові його реалізації для більш ефективної оцінки загроз чи для різних параметрів того, що ми будемо вважати загрозою. Поточна реалізація - реалізація-макет MockStrategy - вважає загрожуючим лише об’єкт з “домом” на російській теріторії.
+5. Власне, до аналізу об’єктів застосовується два підходи: дешифрування пакетів протоколу DJI за допомогою DroneSecurity, яке відбуватиметься на IoT-клієнтах, і тріангуляція джерела сигналів для випадку, коли пакет не був розшифрований.
+На основі азимуту сигналу, що сприймається мінімум двома станціями, проводиться триангуляція. Працює вона таким чином:
+Побудуємо трикутник ATB, де A, B це радіостанції з відомими координатами, а T – це ціль з невідомими координатами. 
+  
+
+Рисунок 1 – Початкові умови
+Проведемо лінію через T паралельно осі ox, відмітимо її перетин з осями, направленими паралельно oy. Вона сформує прямокутні трикутники NAT, MBT, з чого видно, що кут АTB дорівнює (180 - (90 - azimuth alpha) -  (90 - azimuth beta), що можна скоротити до azimuth alpha + azimuth beta). Оскільки азимут бета направлений в інший бік, у програмі береться він зі знаком мінус. 
+  
+
+Рисунок 2 – Паралельна лінія
+  
+
+Рисунок 3 – Обрахування ATB
+Далі, як видно, кут TAB – це різниця між NAB і азімутом alpha. Оскільки у трикутнику NAB сторона AB дорівнює різниці між B та A по осі ox, а сторона NA – по осі oy, то його можна обрахувати як atan(AB / NA). Далі, віднявib від нього азімут alpha, ми отримуємо кут АTB. Отримати останній з кутів трикутника можна, знаючи два інших.
+Далі ми можемо знайти висоту TH за наступною формулою:
+  
+
+Рисунок  4 – Формула висоти
+А знаючи висоту, можемо вияснити дистанцію між A і ціллю, адже вона – це гіпотенуза у прямокутному трикутнику ATH.  
+Знаючи дистанцію між A і T, а також кут азимуту – NAT – ми можемо виявити координати x та y. Додавши їх до координат точки А, ми отримаємо координати точки Т. Функції тріангуляції представлені у лістингу 1 додатку Б, а тестування – у лістингу 2.
+6. Аналіз, показ і початок тривоги покладені на окремі відповідні потоки, які пов’язані між собою чергами LinkedBlockingQueue<>. Це рішення дозволяє обробляти дані по мірі їх приходу. Зберігання даних реального часу від радарів покладено на ще один окремий потік, який запускається раз на десять секунд і викликає збереження у БД, що дозволяє не завантажувати БД постійними запитами. Очищення БД від поточних даних радарів і збереження їх у binary dump покладено на ще один потік, який запускається один раз на 24 години.
+7. У випадку, якщо знайдені загрожуючі об’єкти, їх список передається потіку, що піднімає тривогу. Він змінює стан змінної тривоги у класі застосунку і викликає метод класу NotificationService.
+8. NotificationService реалізує у собі патерн “Спостерігач”. У ньому існує список об’єктів, які власне і реалізують відправку повідомлення про тривогу: на даному етапі це відправка по радіо (буде реалізовано у лабораторній роботі 4) і відправка мобільному клієнту. Такий підхід дозволяє у майбутньому розширити його функціонал, наприклад, додавши автоматичне вмикання сирени. 
+9. Автоматичне збереження резервних копій бази даних: спеціальний потік, що активується при запуску системи, а потім 1 раз на добу, займається викликом утіліти mongodump. 
+________________
+
+
+ВИСНОВКИ
+Протягом лабораторної роботи була реалізована бізнес-логіка серверної частини проекту.
+________________
+
+
+
+
+ДОДАТОК А
+Діаграми і схема бази даних
+  
+
+Рисунок 5 - ER-діаграма (нотація Чена)
+
+
+  
+
+Рисунок 6 - Схема NoSQL бази даних MongoDB
+________________
+  
+
+Рисунок 7 - UML-діаграма прецедентів, дії з користувачами і авторизація
+  
+
+Рисунок 8 - UML-діаграма прецедентів (завершення)
+________________
+
+
+  
+
+Рисунок 9 - UML-діаграма послідовності
+________________
+
+
+ДОДАТОК Б
+Фрагменти коду серверу
+                Лістинг 1 – Функції триангуляції (фрагмент класу)
+public List<SkyObject> triangulateSkyObjects(List<Signal> rawSignals) {
+        // We group signals by frequency, assuming that equal frequency means that signals originate from same source.
+        Map<Double, List<Signal>> frequencyGroupedSignals = rawSignals.stream()
+                .collect(Collectors.groupingBy(Signal::getFrequency));
+
+
+        //We group signals of same frequency, forming groups that most likely belong to one source
+        List<List<Signal>> signalGroups = new LinkedList<>();
+
+
+        frequencyGroupedSignals.values().forEach(signals -> {
+            signalGroups.addAll(groupSignalsOfSameFrequency(signals));
+        });
+
+
+        List<SkyObject> skyObjects = new ArrayList<>();
+
+
+        for (List<Signal> signals : signalGroups) {
+
+
+            if (signals.size() < 2) {
+                log.warn("Signal " + signals.get(0).toString()
+                        + " is observed only from " + signals.size() + " points, needs 2 to triangulate");
+                //We should have at least two points to triangulate
+            } else {
+                try {
+                    skyObjects.add(triangulateObject(signals));
+                } catch (TriangulationFailedException e) {
+                    log.warn("Triangulation failed", e);
+                }
+            }
+        }
+        return skyObjects;
+    }
+
+
+    private SkyObject triangulateObject(List<Signal> signals) throws TriangulationFailedException {
+        Device stationA = devices.get(signals.get(0).getDeviceId());
+        Device stationB = devices.get(signals.get(1).getDeviceId());
+
+
+        double azimuthA = signals.get(0).getAzimuth();
+        double azimuthB = signals.get(1).getAzimuth();
+
+
+        return triangulate(stationA, stationB, azimuthA, azimuthB);
+    }
+
+
+    private static SkyObject triangulate(Device stationA, Device stationB, double azimuthA, double azimuthB) {
+        double distanceBetweenStations = stationA.getLocation().distanceTo(stationB.getLocation());
+
+
+        double dx = stationB.getLatitude() - stationA.getLatitude();
+        double dy = stationB.getLongitude() - stationA.getLongitude();
+
+
+        double angleBetweenLineAndAxis = Math.toDegrees(Math.atan2(dx, dy));
+
+
+        double gamma = azimuthA - azimuthB;
+        double alpha = angleBetweenLineAndAxis - azimuthA;
+        double beta = 180 - gamma - alpha;
+
+
+        double distance = distanceBetweenStations * (Math.sin(Math.toRadians(alpha)) * Math.sin(Math.toRadians(beta)))
+                / (Math.sin(Math.toRadians(alpha + beta)));
+
+
+        double distanceFromAtoTarget = distance / Math.sin(Math.toRadians(alpha));
+
+
+        double x = stationA.getLatitude() + Math.sin(Math.toRadians(azimuthA)) * distanceFromAtoTarget;
+        double y = stationA.getLongitude() + Math.cos(Math.toRadians(azimuthA)) * distanceFromAtoTarget;
+
+
+        return new SkyObject(new Coordinates(x, y));
+    }
+
+
+    private static class TriangulationFailedException extends Exception {
+        public TriangulationFailedException(String message) {
+            super(message);
+        }
+    }
+}
+
+
+Лістинг 2 – Тестування на прикладах 
+public class SignalAnalysisStrategyTests {
+
+
+    private static class SignalAnalysisStrategyImpl extends SignalAnalysisStrategy {
+
+
+        protected SignalAnalysisStrategyImpl(DeviceRepository deviceRepository) {
+            super(deviceRepository);
+        }
+
+
+        protected SignalAnalysisStrategyImpl() {
+            super();
+            kCoefficient = 4.0;
+        }
+
+
+        protected SignalAnalysisStrategyImpl(List<Device> devices) {
+            this.devices = new HashMap<>();
+            for (Device device : devices) {
+                this.devices.put(device.getDeviceId(), device);
+            }
+        }
+
+
+        @Override
+        protected List<List<Signal>> groupSignalsOfSameFrequency(List<Signal> signalsOfSameFrequency) {
+            return List.of(signalsOfSameFrequency);
+        }
+
+
+        @Override
+        public List<SkyObject> analyze(SkyState skyState) {
+            return List.of();
+        }
+    }
+
+
+    private record TestData(List<Signal> signals,
+                            List<Device> devices,
+                            List<SkyObject> expectedObjects) {
+    }
+
+
+    ;
+
+
+    @Test
+    void testTriangulationOK() {
+        double delta = 0.001;
+
+
+
+
+        List<TestData> testData = new ArrayList<>();
+
+
+        testData.add(new TestData(List.of(
+                new Signal(47.7, 1.1, 0.0, new Date(), 1),
+                new Signal(47.7, 1.1, -30.0, new Date(), 2)),
+                List.of(
+                        new Device(
+                                1,
+                                "1",
+                                Device.DeviceType.RADIO_STATION,
+                                new Coordinates(1, 1)),
+                        new Device(
+                                2,
+                                "2",
+                                Device.DeviceType.RADIO_STATION,
+                                new Coordinates(4, 1))),
+                List.of(new SkyObject(new Coordinates(1.0, 6.196)))));
+
+
+        testData.add(new TestData(List.of(
+                new Signal(47.7, 1.1, 45, new Date(), 1),
+                new Signal(47.7, 1.1, -90.0, new Date(), 2)),
+                List.of(
+                        new Device(
+                                1,
+                                "1",
+                                Device.DeviceType.RADIO_STATION,
+                                new Coordinates(1, 1)),
+                        new Device(
+                                2,
+                                "2",
+                                Device.DeviceType.RADIO_STATION,
+                                new Coordinates(11, 5))),
+                List.of(new SkyObject(new Coordinates(5, 5)))));
+
+
+        for (TestData data : testData) {
+            var strategy = new SignalAnalysisStrategyImpl(data.devices);
+
+
+            List<SkyObject> expectedObjects = data.expectedObjects;
+
+
+            for (SkyObject expectedObject : expectedObjects) {
+                double expectedLatitude = expectedObject.getLatitude();
+                double expectedLongitude = expectedObject.getLongitude();
+
+
+                SkyObject actualObject = strategy.triangulateSkyObjects(data.signals).get(0);
+                double actualLatitude = actualObject.getCoordinates().getLatitude();
+                double actualLongitude = actualObject.getCoordinates().getLongitude();
+
+
+                assertEquals(expectedLatitude, actualLatitude, delta, "Latitude mismatch");
+                assertEquals(expectedLongitude, actualLongitude, delta, "Longitude mismatch");
+            }
+        }
+    }
+
+
+}
+
+
+
+
+  
+
+Рисунок – Приклад 1 (геометричний)
+  
+
+Рисунок – Приклад 2 (геометричний)
+
+
+Лістинг 3 - Потік автоматичного збереження бекапів бази даних
+public class DailyCleanupThread implements Runnable {
+    private static final String OUTPUT_FILE_PATH = "C:\\Users\\HP\\OneDrive\\Desktop\\MongoDB";
+
+
+    @Override
+    public void run() {
+        try {
+            System.out.println("Performing daily cleanup...");
+            DatabaseService.getInstance().dumpSkyStates(OUTPUT_FILE_PATH);
+            System.out.println("Sky states dumped successfully.");
+        } catch (Exception e) {
+            System.err.println("Error during daily cleanup: " + e.getMessage());
+        }
+    }
+}
+
+
+
+
+Лістинг 2 - Функція виклику автоматичного збереження
+public void dumpSkyStates(String outputPath) {
+        List<String> command = Arrays.asList(
+                "C:\\Program Files\\MongoDB\\Tools\\100\\bin\\mongodump.exe",
+                "--db", "bastion",
+                "--collection", "sky_state",
+                "--out", outputPath
+        );
+        ProcessBuilder pb = new ProcessBuilder(command).directory(new File(outputPath));
+        System.out.println(pb.command());
+        int exitCode = 0;
+        try {
+            Process process = pb.start();
+            exitCode = process.waitFor();
+        } catch (InterruptedException | IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        System.out.println("exitCode:" + exitCode);
+    }
+
+
+    public void dumpDatabase(String outputPath) {
+        List<String> command = Arrays.asList(
+                "C:\\Program Files\\MongoDB\\Tools\\100\\bin\\mongodump.exe",
+                "--db", "bastion",
+                "--out", outputPath
+        );
+        ProcessBuilder pb = new ProcessBuilder(command).directory(new File(outputPath));
+        System.out.println(pb.command());
+        int exitCode = 0;
+        try {
+            Process process = pb.start();
+            exitCode = process.waitFor();
+        } catch (InterruptedException | IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        System.out.println("exitCode:" + exitCode);
+    }
+
+
+
+
+Лістинг 3 - Ресурс, що приймає дані з радарів
+}
+
+
+
+
+ДОДАТОК В
+Посилання на відео 
+https://youtu.be/Cg-be8Dz8mw
