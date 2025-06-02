@@ -102,16 +102,16 @@ ________________
 Графічні матеріали
   
 
-Рисунок Б.1 — ER-діаграма даних (нотація Чена)
+Рисунок Б.1 — ER-діаграма даних
 
 
   
 
-Рисунок Б.2 — Структура бази даних NoSQL (MongoDB)
+Рисунок Б.2 — Структура бази даних
 ________________
   
 
-Рисунок Б.3 — UML-діаграма прецедентів, дії з користувачами і авторизація
+Рисунок Б.3 — UML-діаграма прецедентів
   
 
 Рисунок Б.4 — UML-діаграма прецедентів (завершення)
@@ -127,7 +127,7 @@ ________________
 ДОДАТОК В
 Фрагменти коду серверу
 В.1 Математична обробка прикладних даних
-                GitHub репозиторій: https://github.com/NureSynenkoIvan/apz-pzpi-22-2-synenko-ivan/blob/main/Lab2/BastionServer/src/main/java/com/bastionserver/analysis/service/strategy/SignalAnalysisStrategy.java 
+GitHub репозиторій: https://github.com/NureSynenkoIvan/apz-pzpi-22-2-synenko-ivan/blob/main/Lab2/BastionServer/src/main/java/com/bastionserver/analysis/service/strategy/SignalAnalysisStrategy.java 
                 Лістинг 1 – Функції триангуляції (фрагмент класу)
 public List<SkyObject> triangulateSkyObjects(List<Signal> rawSignals) {
         // We group signals by frequency, assuming that equal frequency means that signals originate from same source.
