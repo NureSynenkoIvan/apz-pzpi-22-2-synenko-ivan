@@ -1,0 +1,369 @@
+﻿Харківський університет радіоелектроніки
+Факультет комп'ютерних наук
+Кафедра програмної інженерії
+
+
+
+
+
+
+ЗВІТ
+до лабораторної роботи 3 з дисципліни
+"Архітектура програмного забезпечення"
+на тему: "РОЗРОБКА ПРОГРАМНОЇ АРХІТЕКТУРИ ТА СТВОРЕННЯ І ВІДЛАГОДЖЕННЯ ПРОГРАМНОГО КОДУ ПРИСТРОЮ ІНТЕРНЕТУ РЕЧЕЙ (IOT) АБО РОЗУМНОГО ПРИСТРОЯ (SMART DEVICE) ПРОГРАМНОЇ СИСТЕМИ"
+
+
+
+
+
+
+
+
+Виконав ст. гр ПЗПІ-22-2
+Синенко Іван Костянтинович
+
+
+Перевірив
+ст. викладач кафедри ПІ
+Сокорчук Ігор Петрович
+
+
+
+
+
+
+Харків 2025
+ 
+МЕТА
+        
+Метою роботи є є розробити програмне забезпечення для IoT або SmartDevice пристрою, реалізованого на базі будь-якої поширеної на сьогодні платформи, придатної для реалізації вбудованих систем (Embedded System).
+
+
+ХІД РОБОТИ
+        Модуль представляє собою модуль SDR, під’єднаний до Raspberry Pi. Обчислювальні можливості Raspberry Pi дозволяють обробити інформацію, що поступає з SDR, і відправити її на сервер достатньо швидко. 
+Обробка даних проводиться асинхронно, використовуючи файли як канали для комунікації між програмами. Утіліта rtl_sdr записує інформацію, отриману з радіоприймача, у файл output.iq, після чого DroneSecurity аналізує її і записує результат у файл output.txt, який у свою чергу аналізує send_to_server.py, який і вибирає, що відправляти на сервер. Всім цим керує python-скрипт bastion-listener.py, який також керує веб-сервером, що дозволяє зв’язок з пристроєм. 
+DroneSecurity - це програма, яка дозволяє дешифровувати у етері пакети протоколу DroneID.
+Все це є можливим, адже Raspberry Pi має операційну систему, яка є варіантом Linux (офіційна назва – Raspberry OS). Виконання Python-скриптів є можливим на ній, як і під’єднання SDR-модулю. 
+Для тестування я запускав всі зазначені частини програмного забезпеченняна WSL-підсистемі. 
+  
+
+Рисунок 1 –  Зібраний SDR-модуль
+  
+
+Рисунок 2 – Під’єднання SDR-модулю до WSL за допомогою usbipd 
+        Налаштування можливе через файл config.ini, де можна налаштувати ID пристрою, адресу серверу, на яку він буде відправляти знайдену інформацію, credentials для відправки, частоту приймання радіосигналу і частоту дискретизації. 
+        Для функціонального тестування спочатку було перевірено працеспроможність утіліти rtl_sdr, після – прогнано droneid_receiver_offline.py/ на прикладах з папки sample. 
+А після – створено тестові скрипти, які записували приклад сприйманого дрону у output.txt і викликали скрипт відправки на сервер. Сервер був запущений, після чого активація тривоги через сприйняття дрону була перевірена. 
+  
+
+Рисунок 3 – Активація тривоги на сервері даними, відправленими з ІоТ-клієнта (кадр з відео). 
+
+
+
+
+ВИСНОВКИ
+
+
+Протягом лабораторної роботи було створено UML діаграму прецедентів для IoT-частини проекту. Ця частина була розроблена, протестована і реалізована. 
+________________
+
+
+
+
+ДОДАТОК А
+Відеозапис
+Відеозапис презентації результатів лабораторної роботи: https://youtu.be/Cg-be8Dz8mw 
+Хронологічний опис роботи:
+00:00 - початок
+00:23 - Вибір пристроїв
+01:48 - Структура програмної системи
+04:34 - Головний скрипт
+06:52 - Інтеграційне тестування з сервером
+08:15 - Інтеграційне тестування з сервером (виклик тривоги)
+________________
+
+
+ДОДАТОК Б
+UML-діаграми
+  
+
+Рисунок Б.1 – UML-діаграма прецедентів
+
+
+  
+
+
+
+Рисунок Б.2 – UML діаграма взаємодії IoT
+
+
+  
+
+
+
+Рисунок Б.3 – UML діаграма діяльності
+
+
+  
+
+Рисунок Б.4 – UML діаграма компонент
+________________
+
+
+ДОДАТОК В
+Фрагменти коду 
+В.1 Математична обробка прикладних даних
+                GitHub репозиторій: https://github.com/NureSynenkoIvan/apz-pzpi-22-2-synenko-ivan/blob/main/Lab2/BastionServer/src/main/java/com/bastionserver/analysis/service/strategy/SignalAnalysisStrategy.java 
+                Лістинг 1 – bastion-listener.py (виклик обробників даних)
+import configparser
+import os
+import time
+import threading
+import subprocess
+from flask import Flask, jsonify
+
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+
+FREQUENCY = config['Radio']['frequency_to_tune_to']
+SAMPLERATE = config['Radio']['samplerate']
+NUMBER_OF_SAMPLES = config['Radio']['samplerate'] #Because we only record 1 second
+
+
+app_status = "online"
+
+
+app = Flask(__name__)
+
+
+@app.route("/status", methods=["GET"])
+def status():
+    return jsonify({"status": app_status})
+
+
+def run_flask():
+    app.run(host="0.0.0.0", port=5000)
+
+
+def run_main_loop():
+    retries = 0
+    max_retries = 2
+    global app_status
+
+
+    while True:
+        print("[INFO] Starting rtl_sdr capture...")
+        try:
+            subprocess.run(["rtl_sdr", "-f", "100e3", "-s", "2400000", "-g", "20", "-n", "2400000", "output.iq"], check=True)
+            retries = 0
+        except subprocess.CalledProcessError as e:
+            print(f"[ERROR] rtl_sdr failed: {e}, retry after 5 seconds, current retries: {retries}")
+            if (retries <= max_retries):
+                retries += 1
+                time.sleep(5)
+                continue
+            else:
+                print("[ERROR] Can't connect to rtl_sdr")
+                app_status = "offline"
+
+
+                print("[INFO] Will retry after 5 minutes...")
+                time.sleep(300)
+                retries = 0  
+                continue
+
+
+
+
+        if os.path.exists("output.iq"):
+            print("[INFO] Running droneid_receiver_offline.py...")
+            with open("output.txt", "w") as outfile:
+                subprocess.run([
+                    "python3", "./DroneSecurity/src/droneid_receiver_offline.py", 
+                    "-i", "output.iq", "-i", "output.iq"
+                ], stdout=outfile)
+
+
+            with open("output.txt", "r") as f:
+                if "Drone-ID Payload" in f.read():
+                    print("[INFO] Sending data to server...")
+                    subprocess.run(["python3", "send_to_server.py"])
+
+
+            os.remove("output.iq")
+
+
+        time.sleep(5)
+
+
+if __name__ == "__main__":
+    flask_thread = threading.Thread(target=run_flask, daemon=True)
+    flask_thread.start()
+
+
+    run_main_loop()
+
+
+
+
+В.2 Адміністрування бізнес-логіки системи
+GitHub репозиторій: https://github.com/NureSynenkoIvan/apz-pzpi-22-2-synenko-ivan/tree/main/Lab2/BastionServer/src/main/java/com/bastionserver/employees 
+
+
+Лістинг 2 - Парсинг результатів обробки і відправка на сервер
+import os
+import asyncio
+import aiohttp
+import configparser
+from datetime import datetime
+
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+
+DRONE_ENDPOINT_URL = config['Server']['drone_endpoint']
+SIGNAL_ENDPOINT_URL = config['Server']['signal_endpoint']
+USERNAME = config['Credentials']['username']
+PASSWORD = config['Credentials']['password']
+RECEIVER_DEVICE_ID = int(config['Device']['receiver_device_id'])
+
+
+async def parse_output_file(file_path):
+    """Parse output.txt to extract Drone-ID and Signal Payloads."""
+    drone_payloads = []
+    signal_payloads = []
+    current_json = {}
+    in_payload = False
+    current_signal = {}
+    in_candidate_band = False
+    
+    with open(file_path, 'r') as file:
+        for line in file:
+            line = line.strip()
+            if line.startswith("## Drone-ID Payload ##"):
+                in_payload = True
+                current_json = {}
+            if in_payload and line.startswith("{"):
+                continue
+            if in_payload and line.startswith("}"):
+                if current_json.get("crc-packet") == current_json.get("crc-calculated"):
+                    current_json["receiverDeviceId"] = RECEIVER_DEVICE_ID
+                    drone_payloads.append(current_json)
+                else:
+                    signal_payload = handle_crc_error_payload(current_json, current_signal)
+                    if signal_payload:
+                        signal_payloads.append(signal_payload)
+                in_payload = False
+                current_signal = {}
+                in_candidate_band = False
+            if in_payload and line:
+                try:
+                    key, value = line.split(":", 1)
+                    key = key.strip().strip('"')
+                    value = value.strip().strip('",')
+                    value = float(value) if '.' in value else int(value)
+                    current_json[key] = value
+                except ValueError:
+                    continue
+            if line.startswith("candidate band fstart:"):
+                in_candidate_band = True
+                current_signal = {}
+
+
+                parts = line.split(',')
+                fstart = float(parts[0].split(':')[1].strip())
+                fend = float(parts[1].split(':')[1].strip())
+
+
+                central_freq = (fstart + fend) / 2
+                current_signal['frequency'] = central_freq  
+            if in_candidate_band and "offset=" in line and "Fs=" in line:
+
+
+                parts = line.split(',')
+                for part in parts:
+                    if "offset=" in part:
+                        offset = float(part.split('=')[1].strip())
+                        current_signal['frequency'] = abs(offset)  # Use absolute offset as frequency
+                    if "Fs=" in part:
+                        current_signal['signalStrength'] = 0.0  # Placeholder: no signal strength in output
+                        current_signal['azimuth'] = None  # No azimuth data
+                        current_signal['date'] = int(datetime.now().timestamp() * 1000)  # Current time in ms
+                        current_signal['deviceId'] = RECEIVER_DEVICE_ID
+                        in_candidate_band = False
+                        break
+    
+    
+    return drone_payloads, signal_payloads
+
+
+def handle_crc_error_payload(drone_json, signal_data):
+    """Handle CRC error payloads by creating a signal payload."""
+    if not signal_data:
+        return {}
+    signal_payload = {
+        "frequency": signal_data.get("frequency", 0.0),
+        "signalStrength": signal_data.get("signalStrength", 0.0),
+        "azimuth": signal_data.get("azimuth", None),
+        "date": signal_data.get("date", int(datetime.now().timestamp() * 1000)),
+        "deviceId": signal_data.get("deviceId", RECEIVER_DEVICE_ID)
+    }
+    return signal_payload
+async def send_data(session, url, payload_type, payloads):
+    """Send JSON data to HTTP endpoint."""
+    if not payloads:
+        print(f"No valid {payload_type} data to send")
+        return True  # Treat as success, nothing to send
+
+
+    message = {
+        "type": payload_type,
+        "payload": payloads
+    }
+
+
+    try:
+        async with session.post(url, json=message) as resp:
+            text = await resp.text()
+            if resp.status == 200:
+                print(f"Sent {len(payloads)} {payload_type} payloads. Server response: {resp.status} {text}")
+                return True
+            else:
+                print(f"Failed to send {payload_type} data. Server response: {resp.status} {text}")
+                return False
+    except Exception as e:
+        print(f"Error sending {payload_type} data: {e}")
+        return False
+
+
+async def main():
+    """Main async entry point."""
+    file_path = "output.txt"
+    if not os.path.exists(file_path):
+        print("File output.txt does not exist.")
+        return
+
+
+    drone_payloads, signal_payloads = await parse_output_file(file_path)
+
+
+    async with aiohttp.ClientSession() as session:
+        drone_success = await send_data(session, DRONE_ENDPOINT_URL, "drone", drone_payloads)
+        signal_success = await send_data(session, SIGNAL_ENDPOINT_URL, "signal", signal_payloads)
+
+
+        if drone_success and signal_success:
+            try:
+                os.remove(file_path)
+                print("output.txt has been deleted after successful transmission.")
+            except Exception as e:
+                print(f"Failed to delete output.txt: {e}")
+        else:
+            print("Data not fully sent. File output.txt will not be deleted.")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
