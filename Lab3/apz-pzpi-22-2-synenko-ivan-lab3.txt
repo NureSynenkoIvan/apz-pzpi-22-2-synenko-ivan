@@ -113,7 +113,7 @@ ________________
 ДОДАТОК В
 Фрагменти коду 
 В.1 Математична обробка прикладних даних
-                GitHub репозиторій: https://github.com/NureSynenkoIvan/apz-pzpi-22-2-synenko-ivan/blob/main/Lab2/BastionServer/src/main/java/com/bastionserver/analysis/service/strategy/SignalAnalysisStrategy.java 
+                GitHub репозиторій: https://github.com/NureSynenkoIvan/apz-pzpi-22-2-synenko-ivan/blob/main/Lab3/bastion-listener/src/bastion-listener.py 
                 Лістинг 1 – bastion-listener.py (виклик обробників даних)
 import configparser
 import os
@@ -209,7 +209,7 @@ if __name__ == "__main__":
 
 
 В.2 Адміністрування бізнес-логіки системи
-GitHub репозиторій: https://github.com/NureSynenkoIvan/apz-pzpi-22-2-synenko-ivan/tree/main/Lab2/BastionServer/src/main/java/com/bastionserver/employees 
+GitHub репозиторій: https://github.com/NureSynenkoIvan/apz-pzpi-22-2-synenko-ivan/blob/main/Lab3/bastion-listener/src/send_to_server.py 
 
 
 Лістинг 2 - Парсинг результатів обробки і відправка на сервер
