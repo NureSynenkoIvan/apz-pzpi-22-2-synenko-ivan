@@ -1,0 +1,86 @@
+.devices-container {
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.devices-container h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.devices-container p {
+  color: #374151;
+}
+
+.device-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  font-family: Arial, sans-serif;
+}
+
+.device-table th,
+.device-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.device-table th {
+  background-color: #f2f2f2;
+  text-align: left;
+  font-weight: bold;
+}
+
+.device-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.device-table tr:hover {
+  background-color: #f1f1f1;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+  margin: 1rem auto;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f8f8f8;
+}
+
+.edit-form label {
+  display: flex;
+  flex-direction: column;
+  font-weight: bold;
+}
+
+.edit-form input {
+  padding: 5px;
+  font-size: 1rem;
+}
+
+.form-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.device-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+  margin-bottom: 20px;
+}
+
+.device-form input[type="text"],
+.device-form input[type="number"] {
+  padding: 6px;
+  font-size: 14px;
+}

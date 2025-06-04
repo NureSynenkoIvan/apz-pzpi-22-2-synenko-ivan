@@ -1,0 +1,51 @@
+.employees-container {
+  background-color: #ffffff; 
+  padding: 1.5rem;
+  border-radius: 0.5rem; 
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
+}
+
+.employees-container h2 {
+  font-size: 1.5rem; 
+  font-weight: 600; 
+  color: #1f2937; 
+  margin-bottom: 1rem; 
+}
+
+.employees-container p {
+  color: #374151; 
+}
+.employees-page {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.employee-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.employee-table th,
+.employee-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.employee-table th {
+  background-color: #f2f2f2;
+  text-align: left;
+  font-weight: bold;
+}
+
+.employee-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.employee-table tr:hover {
+  background-color: #f1f1f1;
+}
+
+.error-state {
+  color: darkred;
+}

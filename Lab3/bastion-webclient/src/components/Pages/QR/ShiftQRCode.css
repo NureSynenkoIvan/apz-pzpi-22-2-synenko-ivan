@@ -1,0 +1,19 @@
+.qr-page {
+  text-align: center;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.qr-page h2 {
+  margin-bottom: 16px;
+}
+
+.qr-text {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #666;
+}
+
+.error-state {
+  color: darkred;
+}
