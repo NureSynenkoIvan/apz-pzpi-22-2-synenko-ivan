@@ -1,0 +1,484 @@
+﻿Харківський університет радіоелектроніки
+Факультет комп'ютерних наук
+Кафедра програмної інженерії
+
+
+
+
+
+
+ЗВІТ
+до лабораторної роботи 4 з дисципліни
+"Архітектура програмного забезпечення"
+на тему: "РОЗРОБКА ПРОГРАМНОЇ АРХІТЕКТУРИ, СТВОРЕННЯ ТА ВІДЛАГОДЖЕННЯ ПРОГРАМНОГО КОДУ ВЕБ КЛІЄНТА ПРОГРАМНОЇ СИСТЕМИ"
+
+
+
+
+
+
+
+
+Виконав ст. гр ПЗПІ-22-2
+Синенко Іван Костянтинович
+
+
+Перевірив
+ст. викладач кафедри ПІ
+Сокорчук Ігор Петрович
+
+
+
+
+
+
+Харків 2025
+ 
+1 ІСТОРІЯ ЗМІН
+
+
+№
+	Дата
+	Версія звіту
+	Опис змін та виправлень
+	1
+	04.06
+	1.0
+	Створено документ
+	
+
+2 ЗАВДАННЯ        
+Метою роботи є розробити клієнтську / front-end частину програмної системи.
+
+
+3 ХІД РОБОТИ
+        
+        Для створення був обраний фреймворк react, адже він дозволив визначати компоненти, які застосовуються в багатьох місцях, організовуючи таким чином код, дозволяв використовувати змінні стану, а також підтримував парадигму реактивного програмування, що дуже добре підійшла до програмування фронтенд-клієнту, адже вона наближена до того, як користувач взаємодіє з застосунком. 
+        У якості архітектури була обрана модульна архітектура, що дозволила організовувати код за функціональністю.
+        У даному веб-застосунку доступні перегляд інформації про користувачів і пристрої, додання, видалення, і змінення цієї інформації про них, відображення у реальному часі мапи з визначеними на ній об’єктами (переданими з серверу), а також для адміністратора – підняття тривоги за натисканням на кнопку, виклик функцій резервного копіювання і відкату бази даних до певної версії, яка обирається за часом.
+Веб-застосунок взаємодіє з ендпоінтами серверного застосунку. Серверний застосунок взаємодіє з ІоТ-клієнтом і також з мобільним клієнтом (хоча на момент виконання цієї роботи мобільний клієнт не є розробленим).   
+        Також була реалізована інтернаціоналізація за допомогою бібліотеки i18next, що дозволила згрупувати текст за локалями і міняти їх по мірі необхідності. Локаль представляє собою об’єкт, що десериалізується з JSON-файлу. Цей об’єкт – по суті таблиця пар ключ-значення, де у значеннях також можуть бути об’єкти, що дозволяє організовувати тексти так, як потрібно. Я використовував структуру Файл – назви сторінок або категорій – конкретний текст. Реалізовані були українська і англійська локалі. Спосіб, яким реалізована функціональність, дозволяє легко і швидко створювати нові локалі.
+Для стилів були застосовані html+css.
+
+
+        
+4 ВИСНОВКИ
+
+
+Протягом лабораторної роботи було створено веб-клієнт для програмної системи. 
+________________
+
+
+ДОДАТОК А
+Відеозапис
+Відеозапис презентації результатів лабораторної роботи: https://www.youtube.com/watch?v=rCs0wz69Q8c 
+Хронологічний опис відеозапису:
+01:00 - Функціонал диспетчеру
+02:02 - QR-код 
+03:28 - Стан неба (показ у реальному часі)
+05:02 - Інтернаціоналізація
+06:08 - Функціонал адміністратору
+06:44 - Змінення інформації (функції адміністратору)
+07:46 - Резервне копіювання бази даних 
+08:13 - Відновлення з резервної копії
+________________
+
+
+ДОДАТОК Б
+UML-діаграми
+
+
+Рисунок Б.1 – UML-діаграма прецедентів
+
+
+
+
+
+
+Рисунок Б.2 – UML-діаграма компонентів
+
+
+
+
+
+
+Рисунок Б.3 – UML діаграма діяльності
+
+
+
+
+Рисунок Б.4 – UML-діаграма станів
+________________
+
+
+ДОДАТОК В
+Фрагменти коду 
+В.1 Математична обробка прикладних даних
+                GitHub репозиторій: https://github.com/NureSynenkoIvan/apz-pzpi-22-2-synenko-ivan/blob/main/Lab3/bastion-webclient/src/components/Pages/SkyStateViewer.js  
+                Лістинг 1 – Мапа об’єктів
+import React, { useEffect, useState } from 'react';
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import { useTranslation } from 'react-i18next';
+import AlarmStatus from '../AlarmStatus';
+
+
+const SkyStateViewer = () => {
+  const { t } = useTranslation();
+  const [allMarkers, setAllMarkers] = useState([]); 
+  const [visibleDevices, setVisibleDevices] = useState({}); 
+
+
+  useEffect(() => {
+    const fetchSkyState = async () => {
+      try {
+        const storedPhoneNumber = localStorage.getItem('userPhoneNumber');
+        const storedPassword = localStorage.getItem('userPassword');
+        const credentials = btoa(`${storedPhoneNumber}:${storedPassword}`);
+
+
+        const response = await fetch('http://localhost:8080/radar-view', {
+          method: "GET",
+          headers: {
+            "Authorization": `Basic ${credentials}`
+          }
+        });
+        if (!response.ok) throw new Error(t('skyStateViewer.networkError'));
+        const data = await response.json();
+
+
+        const newMarkers = [];
+        const newVisibleDevices = { ...visibleDevices };
+
+
+        Object.entries(data.skyObjects || {}).forEach(([deviceName, objects]) => {
+          if (newVisibleDevices[deviceName] === undefined) {
+            newVisibleDevices[deviceName] = true;
+          }
+
+
+          objects.forEach((obj, index) => {
+            const lat = obj.coordinates.latitude;
+            const lon = obj.coordinates.longitude;
+            if (lat && lon) {
+              newMarkers.push({
+                lat,
+                lon,
+                device: deviceName,
+                id: `${deviceName}-${index}`
+              });
+            }
+          });
+        });
+        setAllMarkers(newMarkers);
+        setVisibleDevices(newVisibleDevices); 
+      } catch (error) {
+        console.error(t('skyStateViewer.fetchError'), error);
+      }
+    };
+
+
+    fetchSkyState();
+
+
+    const interval = setInterval(fetchSkyState, 1000);
+
+
+    return () => clearInterval(interval);
+  }, [t]); 
+
+
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
+    iconUrl: require("leaflet/dist/images/marker-icon.png"),
+    shadowUrl: require("leaflet/dist/images/marker-shadow.png")
+  });
+
+
+  const handleDeviceToggle = (deviceName) => {
+    setVisibleDevices(prevVisibleDevices => ({
+      ...prevVisibleDevices,
+      [deviceName]: !prevVisibleDevices[deviceName] 
+    }));
+  };
+
+
+  const markersToDisplay = allMarkers.filter(marker => visibleDevices[marker.device]);
+
+
+  return (
+    <>
+    <div>
+      <AlarmStatus></AlarmStatus>
+    </div>
+    <div style={{ display: 'flex' }}>
+      <div style={{ width: '20%', padding: '10px', borderRight: '1px solid #ccc' }}>
+        <h3>{t('skyStateViewer.devices')}</h3>
+        {Object.keys(visibleDevices).length > 0 ? (
+          <ul>
+            {Object.keys(visibleDevices).map(deviceName => (
+              <li key={deviceName} style={{ listStyleType: 'none', marginBottom: '5px' }}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={visibleDevices[deviceName]}
+                    onChange={() => handleDeviceToggle(deviceName)}
+                    style={{ marginRight: '5px' }}
+                  />
+                  {deviceName}
+                </label>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>{t('skyStateViewer.noDevicesFound')}</p>
+        )}
+      </div>
+      <MapContainer center={[49.92, 36.29]} zoom={10} style={{ height: "400px", width: "80%" }}>
+        <TileLayer
+          attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        {markersToDisplay.map(marker => (
+          <Marker key={marker.id} position={[marker.lat, marker.lon]}></Marker>
+        ))}
+      </MapContainer>
+    </div>
+    </>
+  );
+};
+
+
+export default SkyStateViewer;
+
+
+
+
+
+
+В.2 Адміністрування бізнес-логіки системи
+GitHub репозиторій: https://github.com/NureSynenkoIvan/apz-pzpi-22-2-synenko-ivan/blob/main/Lab3/bastion-webclient/src/components/Pages/ArchivePage.js  
+
+
+Лістинг 2 - Функціональність резервного копіювання  і відновлення
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+
+const ArchivePage = () => {
+  const { t } = useTranslation();
+  const [isLoading, setIsLoading] = useState(false);
+  const [restoreDate, setRestoreDate] = useState('');
+  const [availableBackups, setAvailableBackups] = useState([]);
+
+
+  const getAuthHeader = () => {
+    const phone = localStorage.getItem('userPhoneNumber');
+    const password = localStorage.getItem('userPassword');
+    return 'Basic ' + btoa(`${phone}:${password}`);
+  };
+
+
+  useEffect(() => {
+    const fetchBackups = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/archive', {
+          method: 'GET',
+          headers: {
+            'Authorization': getAuthHeader()
+          }
+        });
+        const data = await response.json(); 
+        setAvailableBackups(data);
+      } catch (error) {
+        console.error(t('archive.fetchBackupsError'), error);
+      }
+    };
+
+
+    fetchBackups();
+  }, [t]);
+
+
+  const handleBackup = async () => {
+    if (!window.confirm(t('archive.confirmBackup'))) return;
+
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:8080/archive', {
+        method: 'POST',
+        headers: {
+          'Authorization': getAuthHeader()
+        }
+      });
+
+
+      if (response.ok) {
+        alert(t('archive.backupSuccess'));
+      } else {
+        alert(t('archive.backupError'));
+      }
+    } catch (error) {
+      alert(t('archive.genericError', { message: error.message }));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+  const formatDateForRestore = (dateString) => {
+    const date = new Date(dateString);
+
+
+    const pad = (n) => n.toString().padStart(2, '0');
+
+
+    return `${date.getFullYear()}_${pad(date.getMonth() + 1)}_${pad(date.getDate())}_${pad(date.getHours())}_${pad(date.getMinutes())}_${pad(date.getSeconds())}`;
+  };
+
+
+  const handleRestore = async () => {
+    if (!window.confirm(t('archive.confirmRestore'))) return;
+
+
+    if (!restoreDate) {
+      alert(t('archive.selectDatePrompt'));
+      return;
+    }
+
+
+
+
+    setIsLoading(true);
+    alert(restoreDate)
+    try {
+      const response = await fetch(`http://localhost:8080/archive/restore?date=${formatDateForRestore(restoreDate)}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': getAuthHeader()
+        }
+      });
+
+
+      if (response.ok) {
+        alert(t('archive.restoreSuccess'));
+      } else {
+        alert(t('archive.restoreError'));
+      }
+    } catch (error) {
+      alert(t('archive.genericError', { message: error.message }));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+  return (
+    <div className="archive-page">
+      <h2>{t('archive.title')}</h2>
+
+
+      <button onClick={handleBackup} disabled={isLoading}>
+        {t('archive.createBackupButton')}
+      </button>
+
+
+      <div style={{ marginTop: '1em' }}>
+        <label>
+          {t('archive.restoreFromBackupLabel')}:
+          <select
+            value={restoreDate}
+            onChange={(e) => setRestoreDate(e.target.value)}
+            style={{ marginLeft: '1em' }}
+          >
+            <option value="">{t('archive.selectBackupDateOption')}</option>
+            {availableBackups.map((isoDate) => (
+              <option key={isoDate} value={isoDate}>
+                {new Date(isoDate).toLocaleString()}
+              </option>
+            ))}
+          </select>
+        </label>
+
+
+        <button
+          onClick={handleRestore}
+          disabled={isLoading || !restoreDate}
+          style={{ marginLeft: '1em' }}
+        >
+          {t('archive.restoreButton')}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+
+export default ArchivePage;
+
+
+
+
+В.3 Інші фрагменти коду
+GitHub репозиторій: https://github.com/NureSynenkoIvan/apz-pzpi-22-2-synenko-ivan/blob/main/Lab3/bastion-webclient/src/components/AlarmStatus.js 
+
+
+Лістинг 3 - Компонент AlarmStatus.js
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+
+const AlarmStatus = () => {
+  const { t } = useTranslation();
+  const [alarmData, setAlarmData] = useState({ isAlarm: false });
+
+
+  useEffect(() => {
+    const fetchAlarm = async () => {
+      const storedPhoneNumber = localStorage.getItem('userPhoneNumber');
+      const storedPassword = localStorage.getItem('userPassword');
+      const credentials = btoa(`${storedPhoneNumber}:${storedPassword}`);
+
+
+      try {
+        const response = await fetch('http://localhost:8080/alarm', {
+          method: 'GET',
+          headers: {
+            Authorization: `Basic ${credentials}`,
+          },
+        });
+        const data = await response.json();
+        setAlarmData(data);
+      } catch (error) {
+        console.error(t('alarmStatus.fetchError'), error);
+      }
+    };
+
+
+    fetchAlarm();
+    const interval = setInterval(fetchAlarm, 1000); 
+
+
+    return () => clearInterval(interval);
+  }, [t]);
+
+
+  return (
+    <div className="alarm-status">
+      <h2>{t('alarmStatus.title')}</h2>
+      <p>
+        {alarmData.isAlarm ? (
+          <span style={{ color: 'red' }}>🔴 {t('alarmStatus.active')}</span>
+        ) : (
+          <span style={{ color: 'green' }}>🟢 {t('alarmStatus.inactive')}</span>
+        )}
+      </p>
+    </div>
+  );
+};
+
+
+export default AlarmStatus;
