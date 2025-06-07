@@ -11,8 +11,8 @@ function Devices() {
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);        
   const [error, setError] = useState(null);             
-
-  const backendEndpoint = 'http://localhost:8080/devices';
+  const backendUrl = process.env.REACT_APP_BACKEND_URL;
+  const backendEndpoint = backendUrl + '/devices';
 
   useEffect(() => {
     const fetchDevices = async () => {

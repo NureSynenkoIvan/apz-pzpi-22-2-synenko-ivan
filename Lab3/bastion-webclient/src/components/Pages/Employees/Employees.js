@@ -3,6 +3,20 @@ import './Employees.css';
 import AddEmployeeForm from './AddEmployeeForm.js';
 import EditEmployeeForm from './EditEmployeeForm.js';
 import { useTranslation } from 'react-i18next';
+import tzlookup from 'tz-lookup';
+import { DateTime } from 'luxon';
+
+const TIMEZONES = [
+  "UTC",
+  "Europe/Kyiv",
+  "Europe/London",
+  "Europe/Berlin",
+  "America/New_York",
+  "America/Los_Angeles",
+  "Asia/Tokyo",
+  "Asia/Shanghai",
+  "Australia/Sydney"
+];
 
 function Employees() {
   const { t } = useTranslation();
@@ -14,11 +28,17 @@ function Employees() {
   const [searchTerm , setSearchTerm] = useState('')
   const [selectedRole, setSelectedRole] = useState('ALL');
   const [showOnDutyOnly, setShowOnDutyOnly] = useState(false);
-         
+  const [sortOrderAsc, setSortOrderAsc] = useState(true);
+
+
+  const defendLat = parseFloat(process.env.REACT_APP_POINT_TO_DEFEND_LATITUDE);
+  const defendLon = parseFloat(process.env.REACT_APP_POINT_TO_DEFEND_LONGITUDE);
+  const defendTimeZone = tzlookup(defendLat, defendLon);
+  const [selectedTimeZone, setSelectedTimeZone] = useState(defendTimeZone)
   
   const role = localStorage.getItem('userRole');
-
-  const backendEndpoint = 'http://localhost:8080/employees';
+  const backendUrl = process.env.REACT_APP_BACKEND_URL;
+  const backendEndpoint = backendUrl + '/employees';
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -86,7 +106,7 @@ function Employees() {
       
       
 
-      const response = await fetch('http://localhost:8080/employees', {
+      const response = await fetch(backendEndpoint, {
         method: 'POST',
         headers: {
           'Authorization': `Basic ${credentials}`,
@@ -119,7 +139,7 @@ function Employees() {
       const storedPassword = localStorage.getItem('userPassword');
       const credentials = btoa(`${storedPhoneNumber}:${storedPassword}`);
 
-      const response = await fetch(`http://localhost:8080/employees`, {
+      const response = await fetch(backendEndpoint, {
         method: 'PUT',
         headers: {
           'Authorization': `Basic ${credentials}`,
@@ -154,7 +174,7 @@ function Employees() {
       const storedPassword = localStorage.getItem('userPassword');
       const credentials = btoa(`${storedPhoneNumber}:${storedPassword}`);
 
-      const response = await fetch(`http://localhost:8080/employees/delete?phoneNumber=${employee.phoneNumber}`, {
+      const response = await fetch(backendEndpoint + `/delete?phoneNumber=${employee.phoneNumber}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Basic ${credentials}`,
@@ -186,7 +206,7 @@ function Employees() {
       };
       
 
-      await fetch('http://localhost:8080/employees/shift?phoneNumber='+employee.phoneNumber, {
+      await fetch(backendEndpoint + '/shift?phoneNumber='+employee.phoneNumber, {
         method: 'PUT',
         headers: {'Authorization': `Basic ${credentials}`, 
           'Content-Type': 'application/json' }
@@ -200,13 +220,29 @@ function Employees() {
     }
   };
 
+  const sortEmployeesByLastName = (list) => {
+    return [...list].sort((a, b) => {
+      if (a.lastName < b.lastName) return sortOrderAsc ? -1 : 1;
+      if (a.lastName > b.lastName) return sortOrderAsc ? 1 : -1;
+      return 0;
+    });
+  };
+
     const filteredEmployees = employeesData
-    ? employeesData.filter(emp => {
-          const matchesSearch = emp.lastName.toLowerCase().includes(searchTerm.toLowerCase());
-          const matchesRole = selectedRole === 'ALL' || emp.role === selectedRole;
-          const matchesOnDuty = showOnDutyOnly ? emp.onDuty : true; // New filter condition
-          return matchesSearch && matchesRole && matchesOnDuty; // Include new condition
-      }) : [];
+    ? sortEmployeesByLastName((
+        employeesData.filter(emp => {
+            const matchesSearch = emp.lastName.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesRole = selectedRole === 'ALL' || emp.role === selectedRole;
+            const matchesOnDuty = showOnDutyOnly ? emp.onDuty : true; 
+            return matchesSearch && matchesRole && matchesOnDuty; 
+        })
+      )) : [];
+
+  const trimTime = (time) => {
+    return DateTime.fromFormat(time, "HH:mm:ss", { zone: defendTimeZone })
+    .setZone(selectedTimeZone)
+    .toFormat("HH:mm")
+  }
 
 return (
     <div className="employees-page">
@@ -261,6 +297,24 @@ return (
             />
             {t('employees.onDutyFilter')}
           </label>
+          <button onClick={() => setSortOrderAsc(!sortOrderAsc)} style={{ marginBottom: '10px', marginLeft: '10px' }}>
+            {sortOrderAsc ? t('employees.sortAZ') : t('employees.sortZA')}
+          </button>
+          <br />
+          <div style={{ margin: '16px 0' }}>
+            <label style={{ marginRight: '10px' }}>{t('employees.selectTimeZone')}:</label>
+            <select
+              value={selectedTimeZone}
+              onChange={(e) => setSelectedTimeZone(e.target.value)}
+              style={{ padding: '6px', marginRight: '20px' }}
+            >
+              {TIMEZONES.map((zone) => (
+                <option key={zone} value={zone}>
+                  {zone}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
       {employeesData && employeesData.length > 0 ? (
@@ -273,7 +327,7 @@ return (
               <th>{t('employees.position')}</th>
               <th>{t('employees.role')}</th>
               <th>{t('employees.workDaysHeader')}</th>
-              <th>{t('employees.scheduleHeader')}</th>
+              <th>{t('employees.scheduleHeader')} {selectedTimeZone}</th>
               <th>{t('employees.onDutyHeader')}</th>
               <th>{t('employees.actions')}</th>
             </tr>
@@ -288,7 +342,11 @@ return (
                 <td>{emp.position}</td>
                 <td>{t(`roles.${emp.role.toLowerCase()}`)}</td>
                 <td>{emp.workTime?.workDays?.map(day => t(`days.${day.toLowerCase()}`)).join(', ') || 'N/A'}</td>
-                <td>{emp.workTime ? `${emp.workTime.shiftStart} – ${emp.workTime.shiftFinish}` : t('employees.notAvailable')}</td>
+                <td>
+                  {emp.workTime
+                    ? `${trimTime(emp.workTime.shiftStart)} – ${trimTime(emp.workTime.shiftFinish)}`
+                    : t('employees.notAvailable')}
+                </td>                
                 <td>{emp.onDuty ? t('devices.yes') : t('devices.no')}</td>
                 <td>
                   <button

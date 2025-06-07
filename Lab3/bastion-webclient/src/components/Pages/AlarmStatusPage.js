@@ -11,11 +11,11 @@ const AlarmStatusPage = () => {
   const storedPassword = localStorage.getItem('userPassword');
   const userRole = localStorage.getItem('userRole');
   const credentials = btoa(`${storedPhoneNumber}:${storedPassword}`);
+  const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
-  const fetchAlarm = async () => {
-    
+  const fetchAlarm = async () => {    
     try {
-      const response = await fetch('http://localhost:8080/alarm', {
+      const response = await fetch(backendUrl + '/alarm', {
         method: "GET",
         headers: {
           "Authorization": `Basic ${credentials}`
@@ -38,7 +38,7 @@ const AlarmStatusPage = () => {
 
     setIsSending(true);
     try {
-      const response = await fetch(`http://localhost:8080/alarm?isAlarm=${newState}`, {
+      const response = await fetch(backendUrl + `/alarm?isAlarm=${newState}`, {
         method: "POST",
         headers: {
           "Authorization": `Basic ${credentials}`

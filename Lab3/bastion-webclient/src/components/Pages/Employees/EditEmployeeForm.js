@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next'; // Імпортуємо useTranslation
+import { useTranslation } from 'react-i18next';
 
 const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
-  const { t } = useTranslation(); // Ініціалізуємо хук перекладу
+  const { t } = useTranslation(); 
 
   const [formData, setFormData] = useState({
     firstName: employee.firstName || '',
@@ -10,11 +10,6 @@ const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
     phoneNumber: employee.phoneNumber || '',
     role: employee.role || '',
     position: employee.position || '',
-    // Зверніть увагу: `shiftStart` і `shiftFinish` очікують масив `[години, хвилини]`,
-    // але в початковому коді вони ініціалізуються порожнім рядком, якщо немає даних.
-    // Якщо вони зберігаються як рядок 'HH:MM', то це нормально.
-    // Якщо вони зберігаються як масив, то слід перетворити їх на рядок для input type="time".
-    // Тут припускається, що ви зберігаєте їх як рядок 'HH:MM'.
     shiftStart: employee.workTime?.shiftStart || '', 
     shiftFinish: employee.workTime?.shiftFinish || '',
     workDays: employee.workTime?.workDays || [],

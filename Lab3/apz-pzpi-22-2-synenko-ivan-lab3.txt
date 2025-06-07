@@ -8,7 +8,7 @@
 
 
 ЗВІТ
-до лабораторної роботи 4 з дисципліни
+до лабораторної роботи 3 з дисципліни
 "Архітектура програмного забезпечення"
 на тему: "РОЗРОБКА ПРОГРАМНОЇ АРХІТЕКТУРИ, СТВОРЕННЯ ТА ВІДЛАГОДЖЕННЯ ПРОГРАМНОГО КОДУ ВЕБ КЛІЄНТА ПРОГРАМНОЇ СИСТЕМИ"
 
@@ -45,13 +45,17 @@
 	04.06
 	1.0
 	Створено документ
+	2
+	07.06
+	2.0
+	Додано зміни часу а також кілометрів і міль
 	
 
 2 ЗАВДАННЯ        
 Метою роботи є розробити клієнтську / front-end частину програмної системи.
 
 
-3 ХІД РОБОТИ
+3 ОПИС ВИКОНАНОЇ РОБОТИ
         
         Для створення був обраний фреймворк react, адже він дозволив визначати компоненти, які застосовуються в багатьох місцях, організовуючи таким чином код, дозволяв використовувати змінні стану, а також підтримував парадигму реактивного програмування, що дуже добре підійшла до програмування фронтенд-клієнту, адже вона наближена до того, як користувач взаємодіє з застосунком. 
         У якості архітектури була обрана модульна архітектура, що дозволила організовувати код за функціональністю.
@@ -59,8 +63,10 @@
 Веб-застосунок взаємодіє з ендпоінтами серверного застосунку. Серверний застосунок взаємодіє з ІоТ-клієнтом і також з мобільним клієнтом (хоча на момент виконання цієї роботи мобільний клієнт не є розробленим).   
         Також була реалізована інтернаціоналізація за допомогою бібліотеки i18next, що дозволила згрупувати текст за локалями і міняти їх по мірі необхідності. Локаль представляє собою об’єкт, що десериалізується з JSON-файлу. Цей об’єкт – по суті таблиця пар ключ-значення, де у значеннях також можуть бути об’єкти, що дозволяє організовувати тексти так, як потрібно. Я використовував структуру Файл – назви сторінок або категорій – конкретний текст. Реалізовані були українська і англійська локалі. Спосіб, яким реалізована функціональність, дозволяє легко і швидко створювати нові локалі.
 Для стилів були застосовані html+css.
-
-
+Для безпеки підключення і користувацьких даних програма застосовує https замість http. 
+Також було реалізовано відображення дистанції від точки, яку потрібно захищати (вона задається у файлі конфігурації) з перерахуванням дистанції у кілометри або мілі. Підрахунок дистанції відбувається за допомогою формули гаверсинуса (haversine), після чого переводиться в кілометри або милі.
+Також було реалізовано переведення часу змін працівників у потрібний часовий пояс. Часовий пояс, у якому знаходяться працівники, задається точкою, яку потрібно захищати (вона задається у файлі конфігурації).
+        
         
 4 ВИСНОВКИ
 
@@ -71,34 +77,36 @@ ________________
 
 ДОДАТОК А
 Відеозапис
-Відеозапис презентації результатів лабораторної роботи: https://www.youtube.com/watch?v=rCs0wz69Q8c 
+Відеозапис презентації результатів лабораторної роботи: https://youtu.be/B2bDASbkcqk 
 Хронологічний опис відеозапису:
+00:40 - Безпека даних
 01:00 - Функціонал диспетчеру
-02:02 - QR-код 
-03:28 - Стан неба (показ у реальному часі)
-05:02 - Інтернаціоналізація
-06:08 - Функціонал адміністратору
-06:44 - Змінення інформації (функції адміністратору)
-07:46 - Резервне копіювання бази даних 
-08:13 - Відновлення з резервної копії
+02:32 - Зміна часу відображення
+03:00 - QR-код 
+04:11 - Стан неба (показ у реальному часі)
+05:18 - Налаштування міль/кілометрів
+06:35 - Інтернаціоналізація
+07:34 - Функціонал адміністратору
+09:37 - Резервне копіювання бази даних 
+09:52 - Відновлення з резервної копії
 ________________
 
 
 ДОДАТОК Б
 UML-діаграми
-
+  
 
 Рисунок Б.1 – UML-діаграма прецедентів
 
 
 
 
-
+  
 
 Рисунок Б.2 – UML-діаграма компонентів
 
 
-
+  
 
 
 
@@ -107,7 +115,6 @@ UML-діаграми
 
 
 
-Рисунок Б.4 – UML-діаграма станів
 ________________
 
 
@@ -115,143 +122,37 @@ ________________
 Фрагменти коду 
 В.1 Математична обробка прикладних даних
                 GitHub репозиторій: https://github.com/NureSynenkoIvan/apz-pzpi-22-2-synenko-ivan/blob/main/Lab3/bastion-webclient/src/components/Pages/SkyStateViewer.js  
-                Лістинг 1 – Мапа об’єктів
-import React, { useEffect, useState } from 'react';
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
-import { useTranslation } from 'react-i18next';
-import AlarmStatus from '../AlarmStatus';
+                Лістинг 1 – Функція гаверсинуса для дистанції на земній кулі
+  function haversine(lat1, lon1, lat2, lon2, unit='km') {
+    let rad 
+    switch (unit) {
+      case 'mi':
+        rad = 3958.8; //Radius of Earth in miles
+        break;
+      case 'km':
+      default: 
+        rad = 6371 //Radius of Earth in km
+        break;
+    }
 
 
-const SkyStateViewer = () => {
-  const { t } = useTranslation();
-  const [allMarkers, setAllMarkers] = useState([]); 
-  const [visibleDevices, setVisibleDevices] = useState({}); 
+    let dLat = (lat2 - lat1) * Math.PI / 180.0;
+        let dLon = (lon2 - lon1) * Math.PI / 180.0;
+          
+        lat1 = (lat1) * Math.PI / 180.0;
+        lat2 = (lat2) * Math.PI / 180.0;
+        
+        let a = Math.pow(Math.sin(dLat / 2), 2) + 
+                   Math.pow(Math.sin(dLon / 2), 2) * 
+                   Math.cos(lat1) * 
+                   Math.cos(lat2);
+        let c = 2 * Math.asin(Math.sqrt(a));
+        return rad * c;
 
 
-  useEffect(() => {
-    const fetchSkyState = async () => {
-      try {
-        const storedPhoneNumber = localStorage.getItem('userPhoneNumber');
-        const storedPassword = localStorage.getItem('userPassword');
-        const credentials = btoa(`${storedPhoneNumber}:${storedPassword}`);
+    }
 
 
-        const response = await fetch('http://localhost:8080/radar-view', {
-          method: "GET",
-          headers: {
-            "Authorization": `Basic ${credentials}`
-          }
-        });
-        if (!response.ok) throw new Error(t('skyStateViewer.networkError'));
-        const data = await response.json();
-
-
-        const newMarkers = [];
-        const newVisibleDevices = { ...visibleDevices };
-
-
-        Object.entries(data.skyObjects || {}).forEach(([deviceName, objects]) => {
-          if (newVisibleDevices[deviceName] === undefined) {
-            newVisibleDevices[deviceName] = true;
-          }
-
-
-          objects.forEach((obj, index) => {
-            const lat = obj.coordinates.latitude;
-            const lon = obj.coordinates.longitude;
-            if (lat && lon) {
-              newMarkers.push({
-                lat,
-                lon,
-                device: deviceName,
-                id: `${deviceName}-${index}`
-              });
-            }
-          });
-        });
-        setAllMarkers(newMarkers);
-        setVisibleDevices(newVisibleDevices); 
-      } catch (error) {
-        console.error(t('skyStateViewer.fetchError'), error);
-      }
-    };
-
-
-    fetchSkyState();
-
-
-    const interval = setInterval(fetchSkyState, 1000);
-
-
-    return () => clearInterval(interval);
-  }, [t]); 
-
-
-  delete L.Icon.Default.prototype._getIconUrl;
-  L.Icon.Default.mergeOptions({
-    iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
-    iconUrl: require("leaflet/dist/images/marker-icon.png"),
-    shadowUrl: require("leaflet/dist/images/marker-shadow.png")
-  });
-
-
-  const handleDeviceToggle = (deviceName) => {
-    setVisibleDevices(prevVisibleDevices => ({
-      ...prevVisibleDevices,
-      [deviceName]: !prevVisibleDevices[deviceName] 
-    }));
-  };
-
-
-  const markersToDisplay = allMarkers.filter(marker => visibleDevices[marker.device]);
-
-
-  return (
-    <>
-    <div>
-      <AlarmStatus></AlarmStatus>
-    </div>
-    <div style={{ display: 'flex' }}>
-      <div style={{ width: '20%', padding: '10px', borderRight: '1px solid #ccc' }}>
-        <h3>{t('skyStateViewer.devices')}</h3>
-        {Object.keys(visibleDevices).length > 0 ? (
-          <ul>
-            {Object.keys(visibleDevices).map(deviceName => (
-              <li key={deviceName} style={{ listStyleType: 'none', marginBottom: '5px' }}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={visibleDevices[deviceName]}
-                    onChange={() => handleDeviceToggle(deviceName)}
-                    style={{ marginRight: '5px' }}
-                  />
-                  {deviceName}
-                </label>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>{t('skyStateViewer.noDevicesFound')}</p>
-        )}
-      </div>
-      <MapContainer center={[49.92, 36.29]} zoom={10} style={{ height: "400px", width: "80%" }}>
-        <TileLayer
-          attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {markersToDisplay.map(marker => (
-          <Marker key={marker.id} position={[marker.lat, marker.lon]}></Marker>
-        ))}
-      </MapContainer>
-    </div>
-    </>
-  );
-};
-
-
-export default SkyStateViewer;
 
 
 

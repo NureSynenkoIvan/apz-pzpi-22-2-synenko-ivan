@@ -100,7 +100,10 @@
     "role": "Role",
     "notAvailable": "N/A",
     "actions" : "Actions",
-    "onDutyFilter" : "On Duty"
+    "onDutyFilter" : "On Duty",
+    "sortAZ": "Sort A-Z",
+    "sortZA": "Sort Z-A",
+          "selectTimeZone": "Time zone of view"
   },
   "days": {
     "monday": "Monday",
@@ -167,7 +170,16 @@
     "networkError": "Network response was not ok",
     "fetchError": "Failed to fetch sky state:",
     "devices": "Devices",
-    "noDevicesFound" : "No device data has been sent to the server."
+    "noDevicesFound" : "No device data has been sent to the server.",
+    "device": "Device",
+    "lat": "Latitude",
+    "lon": "Longitude",
+    "distanceToDefence" : "Distance",
+    "criticalPoint": "Critical point to defend",
+    "distance": "Distance",
+    "unit": "Distance unit",
+    "kilometers": "Kilometers",
+    "miles": "Miles"
   }
 }
 

@@ -6,6 +6,8 @@ const ArchivePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [restoreDate, setRestoreDate] = useState('');
   const [availableBackups, setAvailableBackups] = useState([]);
+  const backendUrl = process.env.REACT_APP_BACKEND_URL;
+  const archiveEndpoint = backendUrl + '/archive'
 
   const getAuthHeader = () => {
     const phone = localStorage.getItem('userPhoneNumber');
@@ -16,7 +18,7 @@ const ArchivePage = () => {
   useEffect(() => {
     const fetchBackups = async () => {
       try {
-        const response = await fetch('http://localhost:8080/archive', {
+        const response = await fetch(archiveEndpoint, {
           method: 'GET',
           headers: {
             'Authorization': getAuthHeader()
@@ -37,7 +39,7 @@ const ArchivePage = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8080/archive', {
+      const response = await fetch(archiveEndpoint, {
         method: 'POST',
         headers: {
           'Authorization': getAuthHeader()
@@ -76,7 +78,7 @@ const ArchivePage = () => {
     setIsLoading(true);
     alert(restoreDate)
     try {
-      const response = await fetch(`http://localhost:8080/archive/restore?date=${formatDateForRestore(restoreDate)}`, {
+      const response = await fetch(archiveEndpoint + `/restore?date=${formatDateForRestore(restoreDate)}`, {
         method: 'POST',
         headers: {
           'Authorization': getAuthHeader()

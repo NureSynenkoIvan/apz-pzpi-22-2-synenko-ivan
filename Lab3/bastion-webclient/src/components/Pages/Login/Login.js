@@ -9,8 +9,9 @@ function Login({ onLoginSuccess }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate(); 
+  const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
-  const backendEndpoint = 'http://localhost:8080/login';
+  const backendEndpoint = backendUrl+'/login';
 
   const handleSubmit = async (e) => {
     e.preventDefault(); 

@@ -8,8 +8,8 @@ function ShiftQRCode() {
   const [qrCodeData, setQrCodeData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const endpoint = 'http://localhost:8080/shift';
+  const backendUrl = process.env.REACT_APP_BACKEND_URL;
+  const endpoint = backendUrl + '/shift';
 
   useEffect(() => {
     const fetchQRCode = async () => {
