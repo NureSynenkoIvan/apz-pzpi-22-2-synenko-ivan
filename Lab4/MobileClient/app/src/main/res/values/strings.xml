@@ -1,0 +1,81 @@
+<resources>
+    <string name="app_name">BastionMobile</string>
+    <string name="scan_qr_prompt">Скануй QR-код для входу</string>
+    <string name="toast_qr_valid">QR-код дійсний! Перехід до LoginActivity.</string>
+    <string name="toast_qr_invalid">QR-код недійсний!</string>
+    <string name="toast_scan_cancelled">Сканування скасовано або не вдалося</string>
+    <string name="log_qr_validation_response">Response from server: %s</string>
+    <string name="log_qr_validation_server_error">Server returned an error: %s - %s</string>
+    <string name="log_qr_validation_network_error">Network error: %s</string>
+
+    <string name="scan_button_text"> Сканувати</string>
+    <string name="change_language_button_text">Змінити мову</string>
+
+
+    <string name="phonenumber_propmpt">Номер телефону</string>
+    <string name="password_propmpt">Пароль</string>
+    <string name="login_submit_button_text">Увійти</string>
+
+    <string name="error_phone_empty">Будь ласка, введіть телефон</string>
+    <string name="error_password_empty">Будь ласка, введіть пароль</string>
+    <string name="toast_login_successful_clock_in">Логін дійсний! Ви увійшли на зміну! Перехід до Головної сторінки.</string>
+    <string name="toast_login_successful_no_clock_in">Логін дійсний, але не вдалося ввести на зміну.</string>
+    <string name="toast_login_invalid">Логін недійсний!</string>
+    <string name="log_error_empty_response">Отримана порожня відповідь від сервера.</string>
+    <string name="log_error_json_parsing">Помилка при розборі JSON: %s</string>
+    <string name="log_error_network">Помилка мережі: %s</string>
+    <string name="log_error_unexpected">Виникла непередбачена помилка: %s</string>
+    <string name="log_error_server_clock_in">Сервер повернув помилку для входу на зміну: %s - %s</string>
+    <string name="log_error_network_clock_in">Помилка мережі під час входу на зміну: %s</string>
+    <string name="log_error_unexpected_clock_in">Виникла непередбачена помилка під час входу на зміну: %s</string>
+    <string name="log_fcm_token_received">Отримано FCM токен: %s</string>
+    <string name="log_fcm_token_error">Помилка при отриманні FCM токена: %s</string>
+
+    <string name="user_info_name">Ім\'я: %s</string>
+    <string name="user_info_last_name">Прізвище: %s</string>
+    <string name="user_info_phone">Телефон: %s</string>
+    <string name="user_info_role">Роль: %s</string>
+    <string name="user_info_position">Посада: %s</string>
+    <string name="user_info_location">Локація: %s</string>
+    <string name="user_info_location_not_specified">Не вказано</string>
+    <string name="user_info_work_days">Робочі дні: %s</string>
+    <string name="user_info_shift_start">Початок зміни: %s</string>
+    <string name="user_info_shift_finish">Кінець зміни: %s</string>
+    <string name="user_info_work_time_not_specified">Робочий час: Не вказано</string>
+    <string name="user_info_on_duty">На чергуванні: %s</string>
+    <string name="user_info_on_duty_yes">Так</string>
+    <string name="user_info_on_duty_no">Ні</string>
+    <string name="user_info_full_name">Повне ім\'я: %s</string>
+    <string name="user_info_application_role">Роль застосунку: %s</string>
+    <string name="toast_info_loaded_from_cache">Інформація завантажена з локального кешу.</string>
+    <string name="text_info_not_loaded_no_cache">Інформація не завантажена і відсутня в кеші.</string>
+    <string name="toast_info_not_in_cache">Інформація відсутня в кеші.</string>
+
+    <string name="nav_user">Користувач</string>
+    <string name="nav_alarms">Сигнали</string>
+    <string name="nav_logout">Вийти</string>
+
+    <string name="toast_logout_credentials_missing">Помилка: Немає облікових даних для виходу зі зміни.</string>
+    <string name="toast_logout_successful">Успішно вийшли зі зміни.</string>
+    <string name="toast_logout_failed">Не вдалося вийти зі зміни. Спробуйте ще раз.</string>
+    <string name="toast_authentication_error">Помилка автентифікації. Будь ласка, увійдіть знову.</string>
+    <string name="toast_empty_server_response">Порожня відповідь від сервера.</string>
+    <string name="text_info_not_loaded_empty_response">Інформація не завантажена: порожня відповідь.</string>
+    <string name="toast_server_error">Помилка сервера: %d</string>
+    <string name="text_info_not_loaded_server_error">Інформація не завантажена: %d - %s</string>
+    <string name="toast_network_error">Помилка мережі: %s</string>
+    <string name="text_network_error_loading_cache">Помилка мережі. Спроба завантажити з кешу...</string>
+    <string name="toast_unexpected_error">Непередбачена помилка: %s</string>
+    <string name="text_unexpected_error_loading_cache">Непередбачена помилка. Спроба завантажити з кешу...</string>
+    <string name="log_self_info_response">Response: %s</string>
+    <string name="log_self_info_network_error">Network error: %s</string>
+    <string name="log_self_info_unexpected_error">Unexpected error: %s</string>
+    <string name="log_self_info_clock_out_successful">Clock-out successful. Response: %s</string>
+    <string name="log_self_info_server_error_clock_out">Server returned an error for clock-out: %s - %s</string>
+    <string name="log_self_info_network_error_clock_out">Network error during clock-out: %s</string>
+    <string name="log_self_info_unexpected_error_clock_out">An unexpected error occurred during clock-out: %s</string>
+    <string name="select_language_title">Обрати мову</string>
+
+    <string name="alert_information_alert_active"><b>🔴 Тривога активна!</b></string>
+    <string name="alert_information_alert_inactive"><b>🟢 Тривоги немає </b></string>
+</resources>

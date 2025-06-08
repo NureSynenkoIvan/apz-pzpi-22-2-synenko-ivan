@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BastionMobile</string>
+    <string name="scan_qr_prompt">Scan QR-code to log in</string>
+    <string name="toast_qr_valid">QR code is valid! Redirecting to LoginActivity.</string>
+    <string name="toast_qr_invalid">QR code is invalid!</string>
+    <string name="toast_scan_cancelled">Scan cancelled or failed</string>
+    <string name="log_qr_validation_response">Response from server: %s</string>
+    <string name="log_qr_validation_server_error">Server returned an error: %s - %s</string>
+    <string name="log_qr_validation_network_error">Network error: %s</string>
+
+    <string name="change_language_button_text">Change Language</string>
+    <string name="password_propmpt">Password</string>
+    <string name="login_submit_button_text">Login</string>
+    <string name="error_phone_empty">Please enter phone number</string>
+    <string name="error_password_empty">Please enter password</string>
+    <string name="toast_login_successful_clock_in">Login valid! You\'ve clocked in for your shift! Redirecting to Home page.</string>
+    <string name="toast_login_successful_no_clock_in">Login valid, but failed to clock in for shift.</string>
+    <string name="toast_login_invalid">Login invalid!</string>
+    <string name="log_error_empty_response">Received empty response from server.</string>
+    <string name="log_error_json_parsing">Error parsing JSON: %s</string>
+    <string name="log_error_network">Network error: %s</string>
+    <string name="log_error_unexpected">An unexpected error occurred: %s</string>
+    <string name="log_error_server_clock_in">Server returned an error for clock-in: %s - %s</string>
+    <string name="log_error_network_clock_in">Network error during clock-in: %s</string>
+    <string name="log_error_unexpected_clock_in">An unexpected error occurred during clock-in: %s</string>
+    <string name="log_fcm_token_received">FCM token received: %s</string>
+    <string name="log_fcm_token_error">Error getting FCM token: %s</string>
+
+    <string name="user_info_name">Name: %s</string>
+    <string name="user_info_last_name">Last Name: %s</string>
+    <string name="user_info_phone">Phone: %s</string>
+    <string name="user_info_role">Role: %s</string>
+    <string name="user_info_position">Position: %s</string>
+    <string name="user_info_location">Location: %s</string>
+    <string name="user_info_location_not_specified">Not specified</string>
+    <string name="user_info_work_days">Work days: %s</string>
+    <string name="user_info_shift_start">Shift start: %s</string>
+    <string name="user_info_shift_finish">Shift end: %s</string>
+    <string name="user_info_work_time_not_specified">Work hours: Not specified</string>
+    <string name="user_info_on_duty">On duty: %s</string>
+    <string name="user_info_on_duty_yes">Yes</string>
+    <string name="user_info_on_duty_no">No</string>
+    <string name="user_info_full_name">Full name: %s</string>
+    <string name="user_info_application_role">Application role: %s</string>
+    <string name="toast_info_loaded_from_cache">Information loaded from local cache.</string>
+    <string name="text_info_not_loaded_no_cache">Information not loaded and not available in cache.</string>
+    <string name="toast_info_not_in_cache">Information not available in cache.</string>
+
+    <string name="nav_user">User</string>
+    <string name="nav_alarms">Alarms</string>
+    <string name="nav_logout">Log out</string>
+
+    <string name="toast_logout_credentials_missing">Error: No credentials for clocking out of shift.</string>
+    <string name="toast_logout_successful">Successfully clocked out of shift.</string>
+    <string name="toast_logout_failed">Failed to clock out of shift. Please try again.</string>
+    <string name="toast_authentication_error">Authentication error. Please log in again.</string>
+    <string name="toast_empty_server_response">Empty response from server.</string>
+    <string name="text_info_not_loaded_empty_response">Information not loaded: empty response.</string>
+    <string name="toast_server_error">Server error: %d</string>
+    <string name="text_info_not_loaded_server_error">Information not loaded: %d - %s</string>
+    <string name="toast_network_error">Network error: %s</string>
+    <string name="text_network_error_loading_cache">Network error. Attempting to load from cache...</string>
+    <string name="toast_unexpected_error">Unexpected error: %s</string>
+    <string name="text_unexpected_error_loading_cache">Unexpected error. Attempting to load from cache...</string>
+    <string name="log_self_info_response">Response: %s</string>
+    <string name="log_self_info_network_error">Network error: %s</string>
+    <string name="log_self_info_unexpected_error">Unexpected error: %s</string>
+    <string name="log_self_info_clock_out_successful">Clock-out successful. Response: %s</string>
+    <string name="log_self_info_server_error_clock_out">Server returned an error for clock-out: %s - %s</string>
+    <string name="log_self_info_network_error_clock_out">Network error during clock-out: %s</string>
+    <string name="log_self_info_unexpected_error_clock_out">An unexpected error occurred during clock-out: %s</string>
+    <string name="scan_button_text">Scan</string>
+    <string name="select_language_title">Обрати мову</string>
+    <string name="phonenumber_propmpt">Phone Number</string>
+
+    <string name="alert_information_alert_active"><b>🔴 Alert active!</b></string>
+    <string name="alert_information_alert_inactive"><b>🟢 No alert </b></string>
+
+</resources>
